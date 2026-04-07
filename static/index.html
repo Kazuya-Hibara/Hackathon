@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Impact Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-left">
+        <h1><i data-lucide="zap" class="header-icon"></i><span>Impact</span> Tracker</h1>
+      </div>
+      <div class="sponsor-bar">
+        <span class="sponsor-pill"><i data-lucide="brain" style="width:12px;height:12px"></i> Agnes AI</span>
+        <span class="sponsor-pill"><i data-lucide="database" style="width:12px;height:12px"></i> TiDB</span>
+        <span class="sponsor-pill"><i data-lucide="globe" style="width:12px;height:12px"></i> Bright Data</span>
+        <span class="sponsor-pill"><i data-lucide="cpu" style="width:12px;height:12px"></i> Mem9</span>
+      </div>
+    </header>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="today"><i data-lucide="calendar" style="width:16px;height:16px"></i> Today</div>
+      <div class="tab" data-tab="growth"><i data-lucide="trending-up" style="width:16px;height:16px"></i> Growth</div>
+      <div class="tab" data-tab="archive"><i data-lucide="archive" style="width:16px;height:16px"></i> Archive</div>
+    </div>
+
+    <!-- TODAY TAB -->
+    <div id="tab-today" class="tab-content">
+      <!-- Date Navigator -->
+      <div class="date-nav">
+        <button onclick="changeDate(-1)"><i data-lucide="chevron-left" style="width:16px;height:16px"></i></button>
+        <span class="current-date" id="current-date"></span>
+        <button onclick="changeDate(1)"><i data-lucide="chevron-right" style="width:16px;height:16px"></i></button>
+        <button onclick="goToday()" class="btn btn-primary" style="margin-left:auto"><i data-lucide="calendar-check" style="width:14px;height:14px"></i> Today</button>
+      </div>
+
+      <!-- Sync Bar -->
+      <div class="sync-bar">
+        <span style="font-size:.8rem;color:var(--muted)"><i data-lucide="plug" style="width:14px;height:14px;vertical-align:middle"></i> Connectors:</span>
+        <div id="connectors-list"></div>
+        <button class="btn btn-sync" onclick="syncAll()" style="margin-left:auto"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i> Sync All</button>
+      </div>
+
+      <!-- Suggestions Section -->
+      <div class="section">
+        <div class="section-title">
+          <span><i data-lucide="sparkles" style="width:16px;height:16px;vertical-align:middle"></i> AI Suggestions</span>
+          <button class="btn btn-primary" onclick="generateSuggestions()"><i data-lucide="wand-2" style="width:14px;height:14px"></i> Generate</button>
+        </div>
+        <div id="suggestions-list"></div>
+      </div>
+
+      <!-- Entries Section -->
+      <div class="section">
+        <div class="section-title">
+          <span><i data-lucide="list-checks" style="width:16px;height:16px;vertical-align:middle"></i> Impact Items</span>
+          <button class="btn btn-primary" onclick="toggleForm()"><i data-lucide="plus" style="width:14px;height:14px"></i> Add</button>
+        </div>
+        <div id="entries-list"></div>
+      </div>
+
+      <!-- Add Entry Form (hidden by default) -->
+      <div id="entry-form" class="card" style="display:none">
+        <h3 style="margin-bottom:.75rem;font-size:.9rem"><i data-lucide="edit-3" style="width:16px;height:16px;vertical-align:middle"></i> Add Impact Item</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Category</label>
+            <select id="f-category">
+              <option value="DECISION">Decision</option>
+              <option value="BLOCKER_REMOVED">Blocker Removed</option>
+              <option value="ALIGNMENT">Alignment</option>
+              <option value="STRUCTURE">Structure</option>
+              <option value="TEAM_DEV">Team Dev</option>
+              <option value="STRATEGIC_ANTICIPATION">Strategic Anticipation</option>
+              <option value="FIRES_HANDLED">Fires Handled</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Impact Level</label>
+            <select id="f-impact">
+              <option value="MEDIUM">Medium</option>
+              <option value="HIGH">High</option>
+              <option value="LOW">Low</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Description</label>
+            <textarea id="f-description" placeholder="What did you accomplish?"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Time Estimate</label>
+            <input id="f-time" type="text" placeholder="e.g. 1h, 30m">
+          </div>
+          <div class="form-group">
+            <label>Scope Tag</label>
+            <select id="f-scope">
+              <option value="CORE_ROLE">Core Role</option>
+              <option value="ADJACENT_OPS">Adjacent Ops</option>
+              <option value="CROSS_FUNCTIONAL">Cross-Functional</option>
+              <option value="BAU_OVERHEAD">BAU Overhead</option>
+              <option value="STRATEGIC_INITIATIVE">Strategic Initiative</option>
+            </select>
+          </div>
+          <div class="form-group full" style="flex-direction:row;gap:.5rem;justify-content:flex-end">
+            <button class="btn btn-dismiss" onclick="toggleForm()">Cancel</button>
+            <button class="btn btn-accept" onclick="submitEntry()"><i data-lucide="check" style="width:14px;height:14px"></i> Save</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Day Summary -->
+      <div class="section">
+        <div class="section-title"><span><i data-lucide="brain" style="width:16px;height:16px;vertical-align:middle"></i> Day Summary</span></div>
+        <div class="card">
+          <div class="day-summary">
+            <div class="form-group">
+              <label>Cognitive Load</label>
+              <select id="ds-load" onchange="saveDayMeta()">
+                <option value="">-</option>
+                <option value="L">Low</option>
+                <option value="M">Medium</option>
+                <option value="H">High</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Energy</label>
+              <select id="ds-energy" onchange="saveDayMeta()">
+                <option value="">-</option>
+                <option value="STRATEGIC">Strategic</option>
+                <option value="MIXED">Mixed</option>
+                <option value="REACTIVE">Reactive</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GROWTH TAB -->
+    <div id="tab-growth" class="tab-content" style="display:none">
+      <div class="growth-header">
+        <h2><i data-lucide="bar-chart-3" style="width:20px;height:20px;vertical-align:middle"></i> Growth Dashboard</h2>
+        <div class="growth-date-range">
+          <select id="growth-range">
+            <option value="7">Last 7 days</option>
+            <option value="14">Last 14 days</option>
+            <option value="30" selected>Last 30 days</option>
+          </select>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon"><i data-lucide="layers" style="width:24px;height:24px"></i></div>
+          <div class="stat-value" id="stat-total">-</div>
+          <div class="stat-label">Total Items</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon high"><i data-lucide="flame" style="width:24px;height:24px"></i></div>
+          <div class="stat-value" id="stat-high">-</div>
+          <div class="stat-label">High Impact</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon ai"><i data-lucide="sparkles" style="width:24px;height:24px"></i></div>
+          <div class="stat-value" id="stat-suggestions">-</div>
+          <div class="stat-label">AI Suggested</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon cat"><i data-lucide="grid-3x3" style="width:24px;height:24px"></i></div>
+          <div class="stat-value" id="stat-categories">-</div>
+          <div class="stat-label">Categories</div>
+        </div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Category Distribution</h3>
+          <canvas id="chart-categories"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Impact Levels</h3>
+          <canvas id="chart-impact"></canvas>
+        </div>
+      </div>
+      <div class="chart-card chart-wide">
+        <h3>Daily Activity</h3>
+        <canvas id="chart-trend"></canvas>
+      </div>
+    </div>
+
+    <!-- ARCHIVE TAB -->
+    <div id="tab-archive" class="tab-content" style="display:none">
+      <div class="empty-state" id="archive-empty">
+        <i data-lucide="archive" class="empty-icon"></i>
+        <h3>Archive View</h3>
+        <p>Deleted items will appear here for recovery.</p>
+        <button class="btn btn-primary" onclick="loadArchive()"><i data-lucide="refresh-cw" style="width:14px;height:14px"></i> Load Archive</button>
+      </div>
+      <div id="archive-list"></div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
