@@ -2,7 +2,7 @@
 from datetime import date
 from fastapi import APIRouter, HTTPException
 from models import ConnectorStatus, SyncRequest
-from db import execute, execute_one
+from db import execute, execute_one, _is_sqlite
 from connectors.bright_data import sync_bright_data
 
 router = APIRouter()
@@ -38,11 +38,18 @@ async def sync_connector(connector_id: str, req: SyncRequest | None = None):
         raise HTTPException(501, f"Connector {connector_id} not yet implemented")
 
     # Update last_sync
-    execute(
-        """INSERT INTO connector_config (connector_id, enabled, last_sync)
-           VALUES (%s, 1, NOW())
-           ON DUPLICATE KEY UPDATE last_sync = NOW()""",
-        (connector_id,),
-    )
+    if _is_sqlite():
+        execute(
+            """INSERT OR REPLACE INTO connector_config (connector_id, enabled, last_sync)
+               VALUES (%s, 1, datetime('now'))""",
+            (connector_id,),
+        )
+    else:
+        execute(
+            """INSERT INTO connector_config (connector_id, enabled, last_sync)
+               VALUES (%s, 1, NOW())
+               ON DUPLICATE KEY UPDATE last_sync = NOW()""",
+            (connector_id,),
+        )
 
     return {"connector": connector_id, "events_synced": count}

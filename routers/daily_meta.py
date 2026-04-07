@@ -2,7 +2,7 @@
 from datetime import date
 from fastapi import APIRouter
 from models import DailyMetaUpsert, DailyMetaResponse
-from db import execute, execute_one
+from db import execute, execute_one, _is_sqlite
 
 router = APIRouter()
 
@@ -17,14 +17,21 @@ async def get_daily_meta(date: date):
 
 @router.put("/daily-meta/{date}", response_model=DailyMetaResponse)
 async def upsert_daily_meta(date: date, meta: DailyMetaUpsert):
-    execute(
-        """INSERT INTO daily_meta (date, cognitive_load, energy, summary)
-           VALUES (%s, %s, %s, %s)
-           ON DUPLICATE KEY UPDATE
-           cognitive_load = VALUES(cognitive_load),
-           energy = VALUES(energy),
-           summary = VALUES(summary)""",
-        (date, meta.cognitive_load, meta.energy, meta.summary),
-    )
+    if _is_sqlite():
+        execute(
+            """INSERT OR REPLACE INTO daily_meta (date, cognitive_load, energy, summary)
+               VALUES (%s, %s, %s, %s)""",
+            (date, meta.cognitive_load, meta.energy, meta.summary),
+        )
+    else:
+        execute(
+            """INSERT INTO daily_meta (date, cognitive_load, energy, summary)
+               VALUES (%s, %s, %s, %s)
+               ON DUPLICATE KEY UPDATE
+               cognitive_load = VALUES(cognitive_load),
+               energy = VALUES(energy),
+               summary = VALUES(summary)""",
+            (date, meta.cognitive_load, meta.energy, meta.summary),
+        )
     row = execute_one("SELECT * FROM daily_meta WHERE date = %s", (date,))
     return DailyMetaResponse(**row)

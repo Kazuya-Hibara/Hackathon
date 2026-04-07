@@ -3,7 +3,7 @@ import json
 from datetime import date, datetime
 from fastapi import APIRouter, Query, HTTPException
 from models import EntryCreate, EntryUpdate, EntryResponse
-from db import execute, execute_one, execute_insert
+from db import execute, execute_one, execute_insert, _is_sqlite
 
 router = APIRouter()
 
@@ -77,8 +77,9 @@ async def update_entry(entry_id: int, update: EntryUpdate):
 
 @router.delete("/entries/{entry_id}")
 async def soft_delete_entry(entry_id: int):
+    now_fn = "datetime('now')" if _is_sqlite() else "NOW()"
     execute(
-        "UPDATE entries SET deleted = 1, deleted_at = NOW() WHERE id = %s",
+        f"UPDATE entries SET deleted = 1, deleted_at = {now_fn} WHERE id = %s",
         (entry_id,),
     )
     return {"ok": True}
