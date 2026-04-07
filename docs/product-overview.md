@@ -1,4 +1,4 @@
-# Impact Tracker — Product Overview
+# Lazy Captain — Product Overview
 
 > AI-powered managerial impact tracking that makes invisible work visible.
 
@@ -26,9 +26,9 @@ Engineering managers, product managers, team leads — anyone whose job is to **
 
 ## 2. Solution
 
-### Impact Tracker: From Raw Activity to Structured Impact
+### Lazy Captain: From Raw Activity to Structured Impact
 
-Impact Tracker connects to the tools managers already use (calendar, Slack, code review platforms) and uses AI to **automatically detect and categorize impact items** from raw activity data.
+Lazy Captain connects to the tools managers already use (calendar, Slack, code review platforms) and uses AI to **automatically detect and categorize impact items** from raw activity data.
 
 **Core loop:**
 

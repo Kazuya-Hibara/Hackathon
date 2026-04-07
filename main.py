@@ -1,4 +1,4 @@
-"""Managerial Impact Tracker — FastAPI application."""
+"""Lazy Captain — FastAPI application."""
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -16,8 +16,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Impact Tracker",
-    description="AI-powered managerial impact tracking with growth dashboard",
+    title="Lazy Captain",
+    description="AI-powered managerial impact logging — the captain sits back, AI does the work",
     version="0.1.0",
     lifespan=lifespan,
 )
